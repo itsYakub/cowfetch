@@ -1,8 +1,5 @@
 #!/bin/sh
 
-g_name='Cowfetch'
-g_version='1.0'
-
 function cf_checkDeps {
     [ ! -x cowsay ] && echo "$$: dependency not found: cowsay" ; return 1
 
@@ -30,7 +27,7 @@ function cf_getDistro {
 }
 
 function cf_getOS {
-    os=$(uname)
+    os=$(uname -s)
 
     case "$os" in
         'Linux')
@@ -41,9 +38,9 @@ function cf_getOS {
 }
 
 function cf_getArch {
-    os=$(uname -o)
+    arch=$(uname -m)
 
-    printf "$os"
+    printf "$arch"
 }
 
 function cf_getShell {
@@ -74,9 +71,21 @@ function cf_fetch {
 }
 
 function cf_main {
+    # check dependencies...
     [ $cf_checkDeps -e 1 ] && exit 1
 
-    cf_fetch | cowsay -e 42 -n
+    # select either "cowsay" or "cowthink"...
+    cowmodes=("cowsay" "cowthink")
+    random=$[ $RANDOM % ${#cowmodes[@]} ]
+    cowmode=${cowmodes[$random]}
+
+    # select what cowfile we'd like to use...
+    cowlist=( $(cowsay -l) )
+    random=$[ $RANDOM % ${#cowlist[@]} ]
+    cowfile=${cowlist[$random]}
+
+    # execute...
+    cf_fetch | "$cowmode" -e 42 -f "$cowfile" -n
     if [ "$(echo $?)" != 0 ];
     then
         return 1
