@@ -1,0 +1,88 @@
+#!/bin/sh
+
+g_name='Cowfetch'
+g_version='1.0'
+
+function cf_checkDeps {
+    [ ! -x cowsay ] && echo "$$: dependency not found: cowsay" ; return 1
+
+    return 0
+}
+
+function cf_getUser {
+    printf "%s" "$(whoami)"
+}
+
+function cf_getHost {
+    printf "%s" "$(cat /etc/hostname)"
+}
+
+function cf_getDistro {
+    distro=$(source /etc/os-release ; echo $ID)
+
+    case "$distro" in
+        'arch')
+            printf "Arch Linux" ;;
+
+        # ...
+    
+    esac
+}
+
+function cf_getOS {
+    os=$(uname)
+
+    case "$os" in
+        'Linux')
+            echo "$(cf_getDistro)" ;;
+        # ...
+    
+    esac
+}
+
+function cf_getArch {
+    os=$(uname -o)
+
+    printf "$os"
+}
+
+function cf_getShell {
+    shell=$(echo $SHELL | awk -F'/' '{print $NF}')
+
+    printf "$shell"
+}
+
+function cf_getPkgs {
+    distro=$(source /etc/os-release ; echo $ID)
+
+    case "$distro" in
+        'arch')
+            pacman_qe=$(pacman -Qe | wc -l)
+            pacman_qd=$(pacman -Qd | wc -l)
+            printf "%d" "$(($pacman_qe + $pacman_qd))" ;;
+
+        # ...
+    
+    esac
+}
+
+function cf_fetch {
+    echo "$(cf_getUser)@$(cf_getHost):"
+    echo "> OS: $(cf_getOS) ($(cf_getArch))"
+    echo "> shell: $(cf_getShell)"
+    echo "> pkgs: $(cf_getPkgs)"
+}
+
+function cf_main {
+    [ $cf_checkDeps -e 1 ] && exit 1
+
+    cf_fetch | cowsay -e 42 -n
+    if [ "$(echo $?)" != 0 ];
+    then
+        return 1
+    fi
+
+    return 0
+}
+
+cf_main
